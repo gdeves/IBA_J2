@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="maven-antrun-" default="main">
+  <target name="main">
+    <copy file="D:\scripts\IBA_J2\target/IBA_J2.jar" todir="D:/Programmes/Fiji.app/plugins/" />
+  </target>
+</project>
