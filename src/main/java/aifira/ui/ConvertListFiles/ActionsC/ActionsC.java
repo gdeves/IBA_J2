@@ -3,7 +3,6 @@ import aifira.ui.ConvertListFiles.FrameC.FrameC;
 import aifira.ui.ConvertListFiles.ADC.ADC;
 import aifira.ui.ConvertListFiles.MPA3.MPA3;
 import aifira.ui.ConvertListFiles.listFiles.listFiles;
-import aifira.ui.Prefs.PrefsManager;
 import javax.swing.JFileChooser;
 import java.io.File;
 import java.util.ArrayList;
@@ -25,6 +24,12 @@ import javax.swing.JRadioButton;
 import javax.swing.JPanel;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import aifira.ui.Prefs.PrefsManager;
+import org.jfree.chart.*;
+import org.jfree.chart.axis.*;
+import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
+import org.jfree.data.xy.*;
+
 
 /**
  * class for performing various actions in data conversion
@@ -40,6 +45,8 @@ public class ActionsC{
   ImageStack stimStack=new ImageStack(sizeMapX,sizeMapY);
   
   PrefsManager prefs=new PrefsManager();
+  private ChartFrame currentFrame = null;
+  private XYSeriesCollection dataset = null;
 
   /**
   * Constructor for ActionsC class with default initialization of flags and pixe_stack
@@ -193,13 +200,47 @@ public class ActionsC{
   * @param Yvalues double [4096] array containing values to be plotted
   * @param title Name of the plot window
   */
-  private void plot(double [] Yvalues, String title){
-      double [] xValues = new double [4096];
-      for (int i=0;i<4096;i++) xValues[i]=i;
-      
-      Plot p=new Plot(title,"x","y",xValues,Yvalues);
-      p.show();    
-  }
+private void plot(double [] Yvalues, String title){
+    double [] xValues = new double [4096];
+    for (int i=0; i<4096; i++) xValues[i]=i;
+    
+    //Fermeture du plot s'il existe
+    if (currentFrame != null) {
+        currentFrame.dispose();  // Libérer les ressources
+        currentFrame = null;
+    }
+    
+        double minValue = 0.1;  // Valeur minimum acceptable
+    
+    for (int i=0; i<4096; i++) {
+        xValues[i] = i;
+        if (Yvalues[i] <= 0) {
+            Yvalues[i] = minValue;  // Remplacer par minimum
+        }
+    }
+    // Créer le dataset
+    XYSeries series = new XYSeries(title);
+    for (int i = 0; i < 4096; i++) {
+        series.add(xValues[i], Yvalues[i]);
+    }
+    dataset.addSeries(series);
+    
+    // Créer le chart avec LogarithmicAxis
+    NumberAxis xAxis = new NumberAxis("x");
+    NumberAxis yAxis = new LogarithmicAxis("y");
+    XYPlot xyplot = new XYPlot(dataset, xAxis, yAxis, new XYLineAndShapeRenderer());
+    
+    // ✅ Créer le chart SANS titre
+    JFreeChart chart = new JFreeChart(xyplot);
+    
+    if (currentFrame == null) {
+        currentFrame = new ChartFrame("All Plots", chart);
+        currentFrame.setSize(600, 450);
+        currentFrame.setVisible(true);
+    } else {
+        currentFrame.getChartPanel().setChart(chart);  // Rafraîchir
+    }
+}
   /**
   * Actions performed when ADC corresponding to RBS is detected according to flags
   * @param rbs ADC corresponding to RBS
@@ -212,7 +253,8 @@ public class ActionsC{
           if (flags[27]==1) rbs.saveXYEListFile(lF.setExtension("RBS"), (short)1);
           else if (flags[16]==1) rbs.saveXYEListFile(lF.setExtension("ADC"+Integer.toString(indexOfADC+1)+".rbs2"));
           if (flags[22]==1){
-            String title=lF.getPath()+" ADC: "+String.valueOf(indexOfADC+1)+": RBS - N counts = " +String.valueOf(rbs.getNEvents()-1); 
+            String justName = new File(lF.getPath()).getName();
+            String title=justName+" ADC: "+String.valueOf(indexOfADC+1)+": RBS - N counts = " +String.valueOf(rbs.getNEvents()-1); 
             plot(rbs.getSpectra(),title);
           }
           java.lang.System.gc();
@@ -237,7 +279,8 @@ public class ActionsC{
           if (flags[22]==1){
               if (flags[18]==1){
                   if (indexOfADC==16){
-                      String title=lF.getPath()+" ADC: "+String.valueOf(indexOfADC+1)+": PIXE - N counts = " +String.valueOf(pixe.getNEvents()-1);
+                      String justName = new File(lF.getPath()).getName();
+                      String title=justName+" ADC: "+String.valueOf(indexOfADC+1)+": PIXE - N counts = " +String.valueOf(pixe.getNEvents()-1);
                       plot(pixe.getSpectra(),title);
                   }
               }
@@ -273,7 +316,8 @@ public class ActionsC{
       else if (flags[16]==1) adc.saveXYEListFile(lF.setExtension("_ADC"+Integer.toString(indexOfADC+1)+".stim2"));
       //Output: display spectra
       if (flags[22]==1){
-          String title=lF.getPath()+" ADC: "+String.valueOf(indexOfADC+1)+": STIM - N counts = " +String.valueOf(adc.getNEvents()-1);
+          String justName = new File(lF.getPath()).getName();
+          String title=justName+" ADC: "+String.valueOf(indexOfADC+1)+": STIM - N counts = " +String.valueOf(adc.getNEvents()-1);
           plot(adc.getSpectra(),title);
       }
       } catch (Exception e){
@@ -317,7 +361,7 @@ public class ActionsC{
   public void process(){				
           reset_pixe_stack();
           reset_stim_stack();
-          
+          dataset = new XYSeriesCollection();
           for (int indexOfFile=0;indexOfFile<listFilesArray.size();indexOfFile++){
               
               processFile(indexOfFile);
