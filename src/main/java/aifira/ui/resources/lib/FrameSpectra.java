@@ -213,7 +213,7 @@ public void showVisible() {
             }
         });
         jButtonGenImg = new JButton();
-        jButtonGenImg.setText(translate("Generate pictures"));
+        jButtonGenImg.setText(translate("Generate maps"));
         jButtonGenImg.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButtonGenImgActionPerformed(evt);
