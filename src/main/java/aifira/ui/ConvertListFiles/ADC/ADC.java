@@ -1,7 +1,7 @@
 package aifira.ui.ConvertListFiles.ADC;
 import java.util.ArrayList;
 import ij.*;
-import ij.process.ImageProcessor;
+import ij.process.FloatProcessor;
 import java.io.*;
 
 /**
@@ -17,8 +17,8 @@ public class ADC{
     private final ArrayList<Integer> median = new ArrayList<>();
     private final ArrayList<Integer> activationPeriods = new ArrayList<>();
     private String path;
-    private final Integer sizeMapX=1024;
-    private final Integer sizeMapY=1024;
+    private Integer sizeMapX=0;
+    private Integer sizeMapY=0;
 
     
     /**
@@ -43,7 +43,8 @@ public class ADC{
     
     private void initializeMedianMap(){
         try{
-        for (int i=0;i<sizeMapX*sizeMapY+1;i++){
+          
+        for (int i=0;i<sizeMapX*sizeMapY;i++){
             map.add(new ArrayList<Integer>());
             map.get(i).add(0);
         }
@@ -469,9 +470,16 @@ public class ADC{
     public ArrayList<Integer> medianSort(){
 
             try{
+                median.clear(); // ✅ vider avant de remplir
+                map.clear();
+                sizeMapX = getMaxX(); // ✅ calculer dynamiquement
+                sizeMapY = getMaxY();
+                IJ.log("DEBUG getMaxX()=" + getMaxX() + " getMaxY()=" + getMaxY());
                 initializeMedianMap();
+                IJ.log("DEBUG sizeMapX=" + sizeMapX + " sizeMapY=" + sizeMapY);
                 for (int i=1;i<getNEvents();i++){
-                    int index=(int)getX(i)+sizeMapX*(int)getY(i)+1;
+                    
+                    int index = (int)(getX(i)-1) + sizeMapX*(int)(getY(i)-1);
                     try{
                         map.get(index).add((int)getE(i));
                     }
@@ -483,7 +491,10 @@ public class ADC{
             catch (Exception e){
                 IJ.log("**Error** " + e.toString());
             }
-            for (int i=1;i<map.size();i++){
+            IJ.log("DEBUG event count=" + getNEvents());
+IJ.log("DEBUG map size=" + map.size());
+IJ.log("DEBUG median size=" + median.size());
+            for (int i=0;i<map.size();i++){
                 java.util.Collections.sort(map.get(i));
                 int size=map.get(i).size();
                 median.add(map.get(i).get((int)(size/2)));
@@ -516,19 +527,21 @@ public class ADC{
      * Save median map as a TIFF file
      * @param path for the saved file
      */
-    public void saveMedianImage(String path){
-        ImagePlus imp = new ImagePlus();  
-        ImageProcessor ip = imp.getProcessor(); 
-        try{
-        for (int x=0;x<sizeMapX;x++) {
-            for (int y=0;y<sizeMapY;y++){
-                ip.set(x,y,median.get(x+sizeMapX*y));
+public void saveMedianImage(String path){
+    try{
+        FloatProcessor ip = new FloatProcessor(sizeMapX, sizeMapY);
+        for (int x=0; x<sizeMapX; x++){
+            for (int y=0; y<sizeMapY; y++){
+                ip.setf(x, y, median.get(x + sizeMapX*y).floatValue());
             }
         }
-        }
-        catch (Exception e){
-            IJ.log("**Error in saving median image** " + e.toString());
-        }
-        IJ.saveAs(imp, "TIFF",path);
-    }    
+        ImagePlus imp = new ImagePlus("Median", ip);
+        IJ.saveAs(imp, "TIFF", path);
+        IJ.log("DEBUG saveMedianImage sizeMapX=" + sizeMapX + " sizeMapY=" + sizeMapY);
+IJ.log("DEBUG median size=" + median.size());
+    }
+    catch(Exception e){
+        IJ.log("**Error in saving median image** " + e.toString());
+    }
+}   
 }
