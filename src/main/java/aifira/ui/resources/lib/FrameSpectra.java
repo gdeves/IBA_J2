@@ -552,7 +552,7 @@ public void showVisible() {
         }
 return new RoiProperties(roiNames, roiLimits);
  }
-    
+   
     public ArrayList<String> getAllProperties(){
     ArrayList<String> properties = new ArrayList<>();
     
