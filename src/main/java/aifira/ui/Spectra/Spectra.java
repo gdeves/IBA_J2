@@ -385,7 +385,7 @@ public final class Spectra {
   /**
    * generate a chemical Map from an energy window as a new ImageGenerated using this Spectra 
    * @param minEnergy float value as min channel
-   * @param maxEnergy fload value as max channel
+   * @param maxEnergy float value as max channel
    * @return a chemical element map 
    */
   public GeneratedMap elementMap(float minEnergy,float maxEnergy){
