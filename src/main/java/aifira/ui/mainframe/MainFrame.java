@@ -7,6 +7,7 @@ import aifira.ui.FrameConfigLang.FrameConfigLang;
 import aifira.ui.FrameAbout.FrameAbout;
 import aifira.ui.Prefs.PrefsManager;
 import aifira.ui.Spectra.Spectra;
+import aifira.ui.GeneratedMap.GeneratedMap;
 import ij.IJ;
 import java.awt.HeadlessException;
 import java.io.BufferedInputStream;
@@ -29,6 +30,7 @@ import java.io.BufferedReader;
 
 
 
+
 /**
  *This class is the first window which will be open at the launch of IBA_J
  */
@@ -40,6 +42,7 @@ public final class MainFrame extends javax.swing.JFrame {
     private static ArrayList<String> availableLanguages = new ArrayList<>();
     private static ArrayList<String[]> languageData = new ArrayList<>();
     private final FrameAbout frmAbout=new FrameAbout();
+    
     
 
     /**
@@ -209,45 +212,100 @@ public final class MainFrame extends javax.swing.JFrame {
 
     private void jButtonOpenXYEListActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonOpenXYEListActionPerformed
       
-      String path=selectFile();
-      DataInputStream ips=null;
-      PrefsManager prefs=new PrefsManager();
-      try{
-	ips=new DataInputStream(new BufferedInputStream(new FileInputStream(path))); 
-         }
-      catch (FileNotFoundException e){
-          IJ.log("**Error** File was not found");
-      }
-        ADC adc=new ADC(path);
+    String[] paths = selectFiles(); // ✅ sélection multiple
+    if(paths == null) return;
+    PrefsManager prefs = new PrefsManager();
+    
+    boolean isBatch = paths.length > 1;
+    
+    for(String path : paths){
+        DataInputStream ips = null;
+        try{
+            ips = new DataInputStream(new BufferedInputStream(new FileInputStream(path))); 
+        }
+        catch (FileNotFoundException e){
+            IJ.log("**Error** File was not found: " + path);
+            continue; // ✅ passe au fichier suivant
+        }
+        
+        ADC adc = new ADC(path);
         if (path.substring(path.length()-1).equals("2")){
-            File f=new File(path);
+            File f = new File(path);
             IJ.log("Opening file : " + f.getName());
             adc.open(ips);
         }
         else {
-            IJ.log("**Error** Wrong file format");
-            
+            IJ.log("**Error** Wrong file format: " + path);
+            continue;
         }
+        
         try {
-            if (ips != null) ips.close(); 
+            ips.close(); 
         }
         catch(IOException e){
-            IJ.log("**Error ** " + e.toString());
+            IJ.log("**Error** " + e.toString());
         }
-            
+        
+        if(adc.getNEvents() > 1){
+            Spectra spectraXYE = new Spectra(adc, path);
+            if(spectraXYE.getEnergies().length > 1){
+                File f = new File(path);
+                int nROI = Integer.valueOf(prefs.ijGetValue("IBA.nROI", "5"));
+                
+                if(isBatch){
+                    IJ.log("Batch processing: " + f.getName());
+    
+                    ArrayList<String> mapNames = new ArrayList<>();
+                    ArrayList<float[]> roiLimits = new ArrayList<>();
 
-        //if ( adc.getNEvents()>1 && (adc.getlastEvent()[0]!=0 && adc.getlastEvent()[1]!=0) ){//check if a correct file has been open
-        if ( adc.getNEvents()>1){
-            Spectra spectraXYE= new Spectra(adc,path);
-            if(spectraXYE.getEnergies().length>1){//check if a correct file has been open
-                spectraXYE.setParentWindow(this);
-                File f=new File(path);
-                int nROI=Integer.valueOf(prefs.ijGetValue("IBA.nROI", ""+5));
-                spectraXYE.plot(nameOfApplication, (String) translate("File: ")+f.getName(),nROI).showVisible();
-                IJ.log("Total events: " + spectraXYE.getADC().getNEvents());
+                    for(int i = 0; i < nROI; i++){
+                        String state = prefs.ijGetValue("IBA.roi" + i + ".isActive", "false");
+                        if(!state.equals("true")) continue;
+
+                        String name = prefs.ijGetValue("IBA.roi" + i + ".name", "");
+                        String minStr = prefs.ijGetValue("IBA.roi" + i + ".min", "");
+                        String maxStr = prefs.ijGetValue("IBA.roi" + i + ".max", "");
+
+                        if(name.isEmpty() || minStr.isEmpty() || maxStr.isEmpty()) continue;
+
+                        try {
+                            float start = Float.valueOf(minStr);
+                            float end = Float.valueOf(maxStr);
+                            if(start < end){
+                                mapNames.add(name);
+                                roiLimits.add(new float[]{start, end});
+                            }
+                        }
+                        catch(NumberFormatException e){
+                            IJ.log("**Warning** Invalid ROI: " + name);
+                        }
+                    }
+
+                    float[][] roiLimitsArray = roiLimits.toArray(new float[roiLimits.size()][2]);
+                    if(roiLimitsArray.length > 0){
+                        GeneratedMap[] roiMap = spectraXYE.elementMaps(roiLimitsArray);
+    
+                        for(int i = 0; i < roiMap.length; i++){
+                            roiMap[i].setTitle(mapNames.get(i));
+                        }
+    
+                        // Sauvegarde dans le même dossier que le fichier source
+                        String outputPath = path.substring(0, path.lastIndexOf("."));
+    
+                        for(int i = 0; i < roiMap.length; i++){
+                            String savePath = outputPath + "_" + mapNames.get(i) + ".tif";
+                            IJ.saveAsTiff(roiMap[i].getImagePlus(), savePath);
+                            IJ.log("Saved: " + savePath);
+                        }
+                    }
+
+                IJ.log("Done: " + f.getName());  
+                }    
             }
         }
-        java.lang.System.gc();
+    }
+    java.lang.System.gc();
+    
     }//GEN-LAST:event_jButtonOpenXYEListActionPerformed
 
     private void jButtonParamPIXEActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonParamPIXEActionPerformed
@@ -542,7 +600,7 @@ public String[] readLinesFileFromResource(String resourcePath) throws IOExceptio
           
           jF.showOpenDialog(null); 
           selectedFiles = jF.getSelectedFiles();
-          prefs.ijPrefsSaveDirectory(jF.getName());
+          prefs.ijPrefsSaveDirectory(jF.getCurrentDirectory().getAbsolutePath());
         }
         catch (HeadlessException e){
           IJ.log(translate("**Error** Can not open files"));
