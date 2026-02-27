@@ -160,7 +160,7 @@ public class ActionsC{
   private void reset_pixe_stack(){
       //Default number of adc is 8 for AIFIRA. The 9th corresponds to pixe sum adc
       pixe_stack.clear();
-      for (int i=0; i<9;i++){
+      for (int i=0; i<17;i++){
           pixe_stack.add(new double[4096]);
       }
   }
@@ -296,39 +296,41 @@ private void plot(double [] Yvalues, String title, int datasetType){
   * @param indexOfADC index of PIXE adc in MPA
   */
   private void processPIXE(ADC pixe, listFiles lF, int indexOfADC){
-          //saving spectra
-          if (flags[17]==1) pixe.saveGupixSpectra(lF.setExtension("ADC"+Integer.toString(indexOfADC+1)+".gup"));
-          if (flags[18]==1){
-              if (indexOfADC==16) pixe.saveGupixSpectra(lF.setExtension("ADC"+Integer.toString(indexOfADC+1)+".gup"));
-          }
-          //Flag 27 is for SupaVision type
-          if (flags[27]==1) pixe.saveXYEListFile(lF.setExtension("ADC"+Integer.toString(indexOfADC+1)+".PIXE"),(short)0);
-          //Flag 16 is for normal PIXE type
-          else if (flags[16]==1) pixe.saveXYEListFile(lF.setExtension("ADC"+Integer.toString(indexOfADC+1)+".pixe2"));
-          //displays spectra
-          if (flags[22]==1){
-              if (flags[18]==1){
-                  if (indexOfADC==16){
-                      String justName = new File(lF.getPath()).getName();
-                      String title=justName+" ADC: "+String.valueOf(indexOfADC+1)+": PIXE - N counts = " +String.valueOf(pixe.getNEvents()-1);
-                      //plot(pixe.getSpectra(),title);
-                      plot(pixe.getSpectra(), title, 1);
-                  }
-              }
-              else if (flags[17]==1){
-                  String title=lF.getPath()+" ADC: "+String.valueOf(indexOfADC+1)+": PIXE - N counts = " +String.valueOf(pixe.getNEvents()-1);
-                  plot(pixe.getSpectra(), title, 1);
-              }
-          }
-          if (flags[24]==1){
-              double [] t=pixe.getSpectra();
-              for (int i=0;i<4096;i++){
-                  pixe_stack.get(indexOfADC)[i]+=t[i];
-          }
-                      
-          }
-          java.lang.System.gc();
-  }
+
+    // ✅ Fichiers individuels - seulement si flags[17]==1 et pas l'ADC somme
+    if (flags[17]==1 && indexOfADC != 16){
+        pixe.saveGupixSpectra(lF.setExtension("ADC"+Integer.toString(indexOfADC+1)+".gup"));
+        if (flags[16]==1) pixe.saveXYEListFile(lF.setExtension("ADC"+Integer.toString(indexOfADC+1)+".pixe2"));
+    }
+
+    // ✅ Fichier gup somme - seulement si flags[18]==1 et ADC somme
+    if (flags[18]==1 && indexOfADC == 16){
+        pixe.saveGupixSpectra(lF.setExtension("sumAll.gup"));
+        pixe.saveXYEListFile(lF.setExtension("sumAll.pixe2"));
+    }
+
+    // ✅ Accumulation somme dans pixe_stack
+    if (flags[18]==1 && indexOfADC != 16){
+        double[] t = pixe.getSpectra();
+        for (int i=0;i<4096;i++){
+            pixe_stack.get(indexOfADC)[i] += t[i];
+        }
+    }
+
+    // ✅ Affichage
+    if (flags[22]==1){
+        if (flags[18]==1 && indexOfADC==16){
+            String justName = new File(lF.getPath()).getName();
+            String title = justName+" ADC: "+String.valueOf(indexOfADC+1)+": PIXE - N counts = "+String.valueOf(pixe.getNEvents()-1);
+            plot(pixe.getSpectra(), title, 1);
+        }
+        else if (flags[17]==1 && indexOfADC != 16){
+            String title = lF.getPath()+" ADC: "+String.valueOf(indexOfADC+1)+": PIXE - N counts = "+String.valueOf(pixe.getNEvents()-1);
+            plot(pixe.getSpectra(), title, 1);
+        }
+    }
+    java.lang.System.gc();
+}
   /**
   * Actions performed when ADC corresponding to STIM is detected according to flags
   * @param adc ADC corresponding to STIM
@@ -338,8 +340,7 @@ private void plot(double [] Yvalues, String title, int datasetType){
   private void processSTIM(ADC adc, listFiles lF, int indexOfADC){
       try{
       if((flags[21]==1)||(flags[25]==1)) adc.medianSort(); //map calculation
-      if (flags[21]==1) adc.saveMedianTextImage(lF.setExtension("medMap_ADC" +Integer.toString(indexOfADC+1) +".txt")); //saving map
-      //if (flags[21]==1) adc.saveMedianImage(lF.setExtension("medMap.txt")); //saving map
+      if (flags[21]==1) adc.saveMedianImage(lF.setExtension("medMap.txt")); //saving map
       if (flags[25]==1) fillStack(adc,lF); //displaying map
       if (flags[20]==1) adc.saveCountsSpectra(lF.setExtension("stim_ADC" +Integer.toString(indexOfADC+1)+".asc")); // save spectra
       //save XYE list file
@@ -372,9 +373,9 @@ private void plot(double [] Yvalues, String title, int datasetType){
       this.sizeMapY=adc.getMaxY();
       
       //Creation of a map with above size and resizing existing stack created at the instanciation of ActionC
-      ImageProcessor ip = new ShortProcessor(sizeMapX+1, sizeMapY+1);
+      ImageProcessor ip = new ShortProcessor(sizeMapX, sizeMapY);
       StackProcessor stakProc = new StackProcessor(stimStack,ip);
-      stimStack=stakProc.resize(sizeMapX+1,sizeMapY+1);
+      stimStack=stakProc.resize(sizeMapX,sizeMapY);
       
       String title = lF.setExtension("");
       for (int x=0;x<sizeMapX;x++){
@@ -404,12 +405,7 @@ private void plot(double [] Yvalues, String title, int datasetType){
               
               processFile(indexOfFile);
           }
-          if (flags[24]==1){
-              for (int i=0;i<16;i++){
-                  if (flags[i]==3) writePixeStack(listFilesArray.get(0).setExtension("sum"+Integer.toString(i+1)),pixe_stack.get(i));
-              }
-              if (flags[18]==1) writePixeStack(listFilesArray.get(0).setExtension("sum"+"9"),pixe_stack.get(16));
-          }
+
           if (flags[25]==1){
               try {
                   
