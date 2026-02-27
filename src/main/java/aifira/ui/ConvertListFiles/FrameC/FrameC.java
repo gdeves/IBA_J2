@@ -13,6 +13,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.SwingConstants;
+import ij.*;
 
 /**
  * This class is the frame to configure the settings when opening a lst file
@@ -201,10 +202,7 @@ public class FrameC extends javax.swing.JFrame {
         jCheckBox6 = new JCheckBox();
         jCheckBox7 = new JCheckBox();
         jLabel20 = new JLabel();
-        jCheckBox8 = new JCheckBox();
         jCheckBox9 = new JCheckBox();
-        jCheckBox10 = new JCheckBox();
-        jCheckBox11 = new JCheckBox();
         jCheckBox12 = new JCheckBox();
 
         setTitle("Data conversion Options  (07/2014)");
@@ -1422,21 +1420,6 @@ public class FrameC extends javax.swing.JFrame {
         gridBagConstraints.insets = new Insets(10, 5, 0, 0);
         jPanelC.add(jLabel20, gridBagConstraints);
 
-        jCheckBox8.setText("SupaVisio");
-        jCheckBox8.setEnabled(false);
-        jCheckBox8.setName("jCheckBox8"); // NOI18N
-        jCheckBox8.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent evt) {
-                jCheckBox8ActionPerformed(evt);
-            }
-        });
-        gridBagConstraints = new GridBagConstraints();
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 3;
-        gridBagConstraints.anchor = GridBagConstraints.LINE_START;
-        gridBagConstraints.insets = new Insets(0, 5, 0, 0);
-        jPanelC.add(jCheckBox8, gridBagConstraints);
-
         jCheckBox9.setText("STIM stack");
         jCheckBox9.setName("jCheckBox9"); // NOI18N
         jCheckBox9.addActionListener(new ActionListener() {
@@ -1449,35 +1432,6 @@ public class FrameC extends javax.swing.JFrame {
         gridBagConstraints.gridy = 8;
         gridBagConstraints.anchor = GridBagConstraints.LINE_START;
         jPanelC.add(jCheckBox9, gridBagConstraints);
-
-        jCheckBox10.setText("PIXE maps");
-        jCheckBox10.setEnabled(false);
-        jCheckBox10.setName("jCheckBox10"); // NOI18N
-        jCheckBox10.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent evt) {
-                jCheckBox10ActionPerformed(evt);
-            }
-        });
-        gridBagConstraints = new GridBagConstraints();
-        gridBagConstraints.gridx = 1;
-        gridBagConstraints.gridy = 3;
-        gridBagConstraints.anchor = GridBagConstraints.LINE_START;
-        jPanelC.add(jCheckBox10, gridBagConstraints);
-
-        jCheckBox11.setText("<html>Tomo PIXE<br> proj. sum</html>");
-        jCheckBox11.setName("jCheckBox11"); // NOI18N
-        jCheckBox11.setVerticalTextPosition(SwingConstants.TOP);
-        jCheckBox11.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent evt) {
-                jCheckBox11ActionPerformed(evt);
-            }
-        });
-        gridBagConstraints = new GridBagConstraints();
-        gridBagConstraints.gridx = 1;
-        gridBagConstraints.gridy = 4;
-        gridBagConstraints.gridheight = 2;
-        gridBagConstraints.anchor = GridBagConstraints.FIRST_LINE_START;
-        jPanelC.add(jCheckBox11, gridBagConstraints);
 
         jCheckBox12.setText("STIM stack");
         jCheckBox12.setName("jCheckBox12"); // NOI18N
@@ -1512,6 +1466,7 @@ public class FrameC extends javax.swing.JFrame {
     private void jCheckBox2ActionPerformed(ActionEvent evt) {//GEN-FIRST:event_jCheckBox2ActionPerformed
         int flag=17;
         AbstractButton AB = (AbstractButton) evt.getSource();
+           
         if (AB.getModel().isSelected()) act.setFlags(flag,1);
 	else { 
             act.setFlags(flag,0);
@@ -1557,14 +1512,8 @@ public class FrameC extends javax.swing.JFrame {
 	if (AB.getModel().isSelected()) act.setFlags(flag,1);
 	else act.setFlags(flag,0);
     }//GEN-LAST:event_jCheckBox5ActionPerformed
-    // SupaVisio readable (XYE) listfiles type (27)
-    private void jCheckBox8ActionPerformed(ActionEvent evt) {//GEN-FIRST:event_jCheckBox8ActionPerformed
-        int flag=27;
-        AbstractButton AB = (AbstractButton) evt.getSource();
-	if (AB.getModel().isSelected()) act.setFlags(flag,1);
-	else act.setFlags(flag,0);
-    }//GEN-LAST:event_jCheckBox8ActionPerformed
-    // Display spectra (22)
+
+   // Display spectra (22)
     private void jCheckBox7ActionPerformed(ActionEvent evt) {//GEN-FIRST:event_jCheckBox7ActionPerformed
         int flag=22;
         AbstractButton AB = (AbstractButton) evt.getSource();
@@ -1578,30 +1527,8 @@ public class FrameC extends javax.swing.JFrame {
 	if (AB.getModel().isSelected()) act.setFlags(flag,1);
 	else act.setFlags(flag,0);        
     }//GEN-LAST:event_jCheckBox9ActionPerformed
-    // PIXE map calculation (26)
-    private void jCheckBox10ActionPerformed(ActionEvent evt) {//GEN-FIRST:event_jCheckBox10ActionPerformed
-        int flag=26;
-        AbstractButton AB = (AbstractButton) evt.getSource();
-        if (AB.getModel().isSelected()) {
-            act.setFlags(flag,1);
-            
-        }
-	else act.setFlags(flag,0);        
-    }//GEN-LAST:event_jCheckBox10ActionPerformed
-    // Checkbox for pixe stack (24)
-    private void jCheckBox11ActionPerformed(ActionEvent evt) {//GEN-FIRST:event_jCheckBox11ActionPerformed
-        int flag=24;
-        AbstractButton AB = (AbstractButton) evt.getSource();
-	if (AB.getModel().isSelected()){
-            act.setFlags(flag,1);
-            /*if (!(jCheckBox2.isSelected())&&!(jCheckBox3.isSelected())){
-                jCheckBox2.setSelected(true);
-                act.setFlags(9,1);
-            }*/
-        }
-	else act.setFlags(flag,0);
-    }//GEN-LAST:event_jCheckBox11ActionPerformed
-    // STIM map stack calculation (25)
+
+   // STIM map stack calculation (25)
     private void jCheckBox12ActionPerformed(ActionEvent evt) {//GEN-FIRST:event_jCheckBox12ActionPerformed
         int flag=25;
         AbstractButton AB = (AbstractButton) evt.getSource();
@@ -1639,8 +1566,6 @@ public class FrameC extends javax.swing.JFrame {
     private ButtonGroup buttonGroup8;
     private ButtonGroup buttonGroup9;
     private JCheckBox jCheckBox1;
-    private JCheckBox jCheckBox10;
-    private JCheckBox jCheckBox11;
     private JCheckBox jCheckBox12;
     private JCheckBox jCheckBox2;
     private JCheckBox jCheckBox3;
@@ -1648,7 +1573,6 @@ public class FrameC extends javax.swing.JFrame {
     private JCheckBox jCheckBox5;
     private JCheckBox jCheckBox6;
     private JCheckBox jCheckBox7;
-    private JCheckBox jCheckBox8;
     private JCheckBox jCheckBox9;
     private JLabel jLabel1;
     private JLabel jLabel10;
