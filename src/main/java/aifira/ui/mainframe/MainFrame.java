@@ -8,7 +8,9 @@ import aifira.ui.FrameAbout.FrameAbout;
 import aifira.ui.Prefs.PrefsManager;
 import aifira.ui.Spectra.Spectra;
 import aifira.ui.GeneratedMap.GeneratedMap;
+import aifira.ui.CustomWindowImage.CustomWindowImage;
 import ij.IJ;
+import ij.ImagePlus;
 import java.awt.HeadlessException;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
@@ -27,6 +29,11 @@ import java.net.URL;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.BufferedReader;
+import java.io.DataInputStream;
+import java.io.BufferedInputStream;
+import java.io.FileInputStream;
+import java.io.File;
+import ij.ImagePlus;
 
 
 
@@ -79,6 +86,7 @@ public final class MainFrame extends javax.swing.JFrame {
         jButtonOpenXYEList = new javax.swing.JButton();
         jButtonParamLst = new javax.swing.JButton();
         jButtonParamPIXE = new javax.swing.JButton();
+        jButtonOpenMaps = new javax.swing.JButton();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu_file = new javax.swing.JMenu();
         jMenu_open = new javax.swing.JMenuItem();
@@ -119,6 +127,13 @@ public final class MainFrame extends javax.swing.JFrame {
         jButtonParamPIXE.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButtonParamPIXEActionPerformed(evt);
+            }
+        });
+
+        jButtonOpenMaps.setText(translate("Open Maps"));
+        jButtonOpenMaps.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonOpenMapsActionPerformed(evt);
             }
         });
 
@@ -179,10 +194,15 @@ public final class MainFrame extends javax.swing.JFrame {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButtonOpenLst, javax.swing.GroupLayout.PREFERRED_SIZE, 243, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(jButtonParamPIXE, javax.swing.GroupLayout.PREFERRED_SIZE, 243, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jButtonOpenXYEList, javax.swing.GroupLayout.PREFERRED_SIZE, 243, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addGroup(layout.createSequentialGroup()
+                                .addGap(0, 0, Short.MAX_VALUE)
+                                .addComponent(jButtonOpenMaps, javax.swing.GroupLayout.PREFERRED_SIZE, 243, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(jButtonParamPIXE, javax.swing.GroupLayout.PREFERRED_SIZE, 243, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(jButtonOpenXYEList, javax.swing.GroupLayout.PREFERRED_SIZE, 243, javax.swing.GroupLayout.PREFERRED_SIZE)))
                         .addGap(40, 40, 40))))
         );
         layout.setVerticalGroup(
@@ -196,6 +216,8 @@ public final class MainFrame extends javax.swing.JFrame {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jButtonParamPIXE, javax.swing.GroupLayout.PREFERRED_SIZE, 38, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jButtonOpenXYEList, javax.swing.GroupLayout.PREFERRED_SIZE, 38, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(18, 18, 18)
+                .addComponent(jButtonOpenMaps, javax.swing.GroupLayout.PREFERRED_SIZE, 34, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
@@ -294,13 +316,23 @@ public final class MainFrame extends javax.swing.JFrame {
     
                         for(int i = 0; i < roiMap.length; i++){
                             String savePath = outputPath + "_" + mapNames.get(i) + ".tif";
-                            IJ.saveAsTiff(roiMap[i].getImagePlus(), savePath);
+                            ImagePlus ip = roiMap[i].getImagePlus();
+                            ip.setProperty("Info", path);
+                            String binaryPath = (String) ip.getProperty("sourceBinaryPath");
+                            IJ.log("DEBUG binaryPath from metadata: " + binaryPath);
+                            IJ.saveAsTiff(ip, savePath);
                             IJ.log("Saved: " + savePath);
                         }
                     }
 
                 IJ.log("Done: " + f.getName());  
-                }    
+                }
+                else {
+                    // ✅ Mode manuel : comportement original
+                    spectraXYE.setParentWindow(this);
+                    spectraXYE.plot(nameOfApplication, (String) translate("File: ") + f.getName(), nROI).showVisible();
+                    IJ.log("Total events: " + spectraXYE.getADC().getNEvents());
+                }
             }
         }
     }
@@ -350,6 +382,46 @@ public final class MainFrame extends javax.swing.JFrame {
                 IJ.log(e.toString());
             }
     }//GEN-LAST:event_jMenu_helpContentActionPerformed
+
+    private void jButtonOpenMapsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonOpenMapsActionPerformed
+        String[] paths = selectFiles();
+        if(paths == null) return;
+
+        for(String tifPath : paths){
+            ImagePlus ip = IJ.openImage(tifPath);
+            String binaryPath = ip.getInfoProperty();
+            IJ.log("DEBUG read binaryPath: " + binaryPath);
+            if(ip == null){
+                IJ.log("**Error** Cannot open: " + tifPath);
+                continue;
+            }
+
+            if(binaryPath == null || !new File(binaryPath).exists()){
+                IJ.log("**Error** Source binary not found for: " + tifPath);
+                continue;
+            }
+            try {
+                DataInputStream ips = new DataInputStream(new BufferedInputStream(new FileInputStream(binaryPath)));
+                ADC adc = new ADC(binaryPath);
+                adc.open(ips);
+                ips.close();
+                Spectra spectraSource = new Spectra(adc, binaryPath);
+                spectraSource.setParentWindow(this);
+                int w = spectraSource.getADC().getMaxX();
+                int h = spectraSource.getADC().getMaxY();
+                float[] energies = spectraSource.getEnergies();
+                double[] emptyPixels = new double[w * h];
+                GeneratedMap reloadedMap = new GeneratedMap(spectraSource, emptyPixels, energies[0], energies[energies.length-1], w, h);
+                GeneratedMap[] stack = new GeneratedMap[]{reloadedMap};
+                CustomWindowImage cwi = new CustomWindowImage(ip, stack);
+                reloadedMap.setActiveWindow(cwi); // ✅ lier la fenêtre à la map
+                cwi.setVisible(true);
+            } catch(Exception ex){
+                IJ.log("**Error** " + ex.getMessage());
+                ex.printStackTrace(); // ✅ afficher la stack trace complète dans la console
+            }
+        }
+    }//GEN-LAST:event_jButtonOpenMapsActionPerformed
 
     
     
@@ -595,6 +667,9 @@ public String[] readLinesFileFromResource(String resourcePath) throws IOExceptio
         try{
           JFileChooser jF = new JFileChooser();
           File myDir=new File(prefs.ijGetLastUsedDirectory());
+          if(myDir.exists()){
+              jF.setCurrentDirectory(myDir); // ✅ démarrer dans le bon dossier
+          }
           jF.setApproveButtonText(translate("OK")); 
           jF.setMultiSelectionEnabled(true);
           
@@ -651,6 +726,7 @@ public String[] readLinesFileFromResource(String resourcePath) throws IOExceptio
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.ButtonGroup bG_language;
     private javax.swing.JButton jButtonOpenLst;
+    private javax.swing.JButton jButtonOpenMaps;
     private javax.swing.JButton jButtonOpenXYEList;
     private javax.swing.JButton jButtonParamLst;
     private javax.swing.JButton jButtonParamPIXE;
