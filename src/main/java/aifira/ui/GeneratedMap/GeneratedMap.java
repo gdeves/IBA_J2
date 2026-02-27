@@ -70,7 +70,9 @@ public class GeneratedMap {
   public String getTitle(){
       return title;
   }
-  
+  public void setActiveWindow(CustomWindowImage window){
+    this.activeWindow = window;
+}
   /**
    * Set the title of the maps
    * @param title 
