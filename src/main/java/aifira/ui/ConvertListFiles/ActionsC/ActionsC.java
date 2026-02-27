@@ -6,7 +6,6 @@ import aifira.ui.ConvertListFiles.listFiles.listFiles;
 import javax.swing.JFileChooser;
 import java.io.File;
 import java.util.ArrayList;
-import ij.gui.Plot;
 import ij.*;
 import ij.io.FileSaver;
 import ij.plugin.ContrastEnhancer;
@@ -44,9 +43,15 @@ public class ActionsC{
   ArrayList <double []> pixe_stack=new ArrayList <>();
   ImageStack stimStack=new ImageStack(sizeMapX,sizeMapY);
   
-  PrefsManager prefs=new PrefsManager();
   private ChartFrame currentFrame = null;
   private XYSeriesCollection dataset = null;
+  private XYSeriesCollection dataset1 = null;
+  private XYSeriesCollection dataset2 = null;
+  private XYSeriesCollection dataset3 = null;
+  
+  private ChartFrame frame1 = null;
+  private ChartFrame frame2 = null;
+  private ChartFrame frame3 = null;
 
   /**
   * Constructor for ActionsC class with default initialization of flags and pixe_stack
@@ -200,45 +205,70 @@ public class ActionsC{
   * @param Yvalues double [4096] array containing values to be plotted
   * @param title Name of the plot window
   */
-private void plot(double [] Yvalues, String title){
+private void plot(double [] Yvalues, String title, int datasetType){
     double [] xValues = new double [4096];
     for (int i=0; i<4096; i++) xValues[i]=i;
     
-    //Fermeture du plot s'il existe
-    if (currentFrame != null) {
-        currentFrame.dispose();  // Libérer les ressources
-        currentFrame = null;
-    }
-    
-        double minValue = 0.1;  // Valeur minimum acceptable
+    double minValue = 0.1;
     
     for (int i=0; i<4096; i++) {
-        xValues[i] = i;
         if (Yvalues[i] <= 0) {
-            Yvalues[i] = minValue;  // Remplacer par minimum
+            Yvalues[i] = minValue;
         }
     }
-    // Créer le dataset
+    
+    // ✅ Choisir le bon dataset selon le type
+    XYSeriesCollection dataset = null;
+    ChartFrame currentFrame = null;
+    String windowTitle = null;
+    
+    if (datasetType == 1) {
+        dataset = dataset1;
+        currentFrame = frame1;
+        windowTitle = "PIXE spectra";
+    } else if (datasetType == 2) {
+        dataset = dataset2;
+        currentFrame = frame2;
+        windowTitle = "RBS spectra";
+    } else if (datasetType == 3) {
+        dataset = dataset3;
+        currentFrame = frame3;
+        windowTitle = "STIM spectra";
+    }
+    
+    // Créer le dataset s'il n'existe pas
+    if (dataset == null) {
+        dataset = new XYSeriesCollection();
+        if (datasetType == 1) dataset1 = dataset;
+        else if (datasetType == 2) dataset2 = dataset;
+        else if (datasetType == 3) dataset3 = dataset;
+    }
+    
+    // Ajouter la série
     XYSeries series = new XYSeries(title);
     for (int i = 0; i < 4096; i++) {
         series.add(xValues[i], Yvalues[i]);
     }
     dataset.addSeries(series);
     
-    // Créer le chart avec LogarithmicAxis
+    // Créer le chart
     NumberAxis xAxis = new NumberAxis("x");
     NumberAxis yAxis = new LogarithmicAxis("y");
     XYPlot xyplot = new XYPlot(dataset, xAxis, yAxis, new XYLineAndShapeRenderer());
-    
-    // ✅ Créer le chart SANS titre
     JFreeChart chart = new JFreeChart(xyplot);
     
+    // ✅ Gérer la bonne frame
     if (currentFrame == null) {
-        currentFrame = new ChartFrame("All Plots", chart);
+        currentFrame = new ChartFrame(windowTitle, chart);
         currentFrame.setSize(600, 450);
         currentFrame.setVisible(true);
+        
+        // ✅ Sauvegarder la référence
+        if (datasetType == 1) frame1 = currentFrame;
+        else if (datasetType == 2) frame2 = currentFrame;
+        else if (datasetType == 3) frame3 = currentFrame;
     } else {
-        currentFrame.getChartPanel().setChart(chart);  // Rafraîchir
+        currentFrame.getChartPanel().setChart(chart);
     }
 }
   /**
@@ -255,7 +285,7 @@ private void plot(double [] Yvalues, String title){
           if (flags[22]==1){
             String justName = new File(lF.getPath()).getName();
             String title=justName+" ADC: "+String.valueOf(indexOfADC+1)+": RBS - N counts = " +String.valueOf(rbs.getNEvents()-1); 
-            plot(rbs.getSpectra(),title);
+            plot(rbs.getSpectra(),title,2);
           }
           java.lang.System.gc();
   }
@@ -281,12 +311,13 @@ private void plot(double [] Yvalues, String title){
                   if (indexOfADC==16){
                       String justName = new File(lF.getPath()).getName();
                       String title=justName+" ADC: "+String.valueOf(indexOfADC+1)+": PIXE - N counts = " +String.valueOf(pixe.getNEvents()-1);
-                      plot(pixe.getSpectra(),title);
+                      //plot(pixe.getSpectra(),title);
+                      plot(pixe.getSpectra(), title, 1);
                   }
               }
               else if (flags[17]==1){
                   String title=lF.getPath()+" ADC: "+String.valueOf(indexOfADC+1)+": PIXE - N counts = " +String.valueOf(pixe.getNEvents()-1);
-                  plot(pixe.getSpectra(),title);
+                  plot(pixe.getSpectra(), title, 1);
               }
           }
           if (flags[24]==1){
@@ -318,7 +349,7 @@ private void plot(double [] Yvalues, String title){
       if (flags[22]==1){
           String justName = new File(lF.getPath()).getName();
           String title=justName+" ADC: "+String.valueOf(indexOfADC+1)+": STIM - N counts = " +String.valueOf(adc.getNEvents()-1);
-          plot(adc.getSpectra(),title);
+          plot(adc.getSpectra(),title,3);
       }
       } catch (Exception e){
           IJ.log(e.toString());
@@ -362,6 +393,13 @@ private void plot(double [] Yvalues, String title){
           reset_pixe_stack();
           reset_stim_stack();
           dataset = new XYSeriesCollection();
+          dataset1 = new XYSeriesCollection();
+          dataset2 = new XYSeriesCollection();
+          dataset3 = new XYSeriesCollection();
+          frame1 = null;  // ✅ Reset les frames
+          frame2 = null;
+          frame3 = null;
+          
           for (int indexOfFile=0;indexOfFile<listFilesArray.size();indexOfFile++){
               
               processFile(indexOfFile);
