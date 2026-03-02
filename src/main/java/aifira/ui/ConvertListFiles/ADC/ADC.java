@@ -474,9 +474,8 @@ public class ADC{
                 map.clear();
                 sizeMapX = getMaxX(); // ✅ calculer dynamiquement
                 sizeMapY = getMaxY();
-                IJ.log("DEBUG getMaxX()=" + getMaxX() + " getMaxY()=" + getMaxY());
                 initializeMedianMap();
-                IJ.log("DEBUG sizeMapX=" + sizeMapX + " sizeMapY=" + sizeMapY);
+                
                 for (int i=1;i<getNEvents();i++){
                     
                     int index = (int)(getX(i)-1) + sizeMapX*(int)(getY(i)-1);
@@ -491,9 +490,7 @@ public class ADC{
             catch (Exception e){
                 IJ.log("**Error** " + e.toString());
             }
-            IJ.log("DEBUG event count=" + getNEvents());
-IJ.log("DEBUG map size=" + map.size());
-IJ.log("DEBUG median size=" + median.size());
+            
             for (int i=0;i<map.size();i++){
                 java.util.Collections.sort(map.get(i));
                 int size=map.get(i).size();
@@ -502,27 +499,7 @@ IJ.log("DEBUG median size=" + median.size());
             return  median;
     }
 
-    /**
-     * Saves median map as a 2D text file using given path
-     * @param path filename for 2D text file
-     */
-    public void saveMedianTextImage(String path){
-            try{
-                    PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(path)));
-
-                    for (int x=0;x<sizeMapX;x++) {
-                            String line="";
-                            for (int y=0;y<sizeMapY;y++){
-                                    line+=String.valueOf(median.get(x+sizeMapX*y))+" ";
-                            }
-                            out.println(line);
-                    }
-                    out.close();                  
-            }
-            catch (IOException e){
-                IJ.log("**Error3 in saving median text image " + e.toString());
-            }
-    }
+    
     /**
      * Save median map as a TIFF file
      * @param path for the saved file
@@ -537,9 +514,7 @@ public void saveMedianImage(String path){
         }
         ImagePlus imp = new ImagePlus("Median", ip);
         IJ.saveAs(imp, "TIFF", path);
-        IJ.log("DEBUG saveMedianImage sizeMapX=" + sizeMapX + " sizeMapY=" + sizeMapY);
-IJ.log("DEBUG median size=" + median.size());
-    }
+        }
     catch(Exception e){
         IJ.log("**Error in saving median image** " + e.toString());
     }
