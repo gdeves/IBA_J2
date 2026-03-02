@@ -175,8 +175,7 @@ public boolean isColorAvailable(int R, int G, int B, int numberOfCall){
         JCheckBox checkBoxCurrent = (JCheckBox) tabJCompToCheck[0];
         
         if(objectActivated == checkBoxCurrent){
-            System.out.println("DEBUG: Update ROI " + (i+1));
-            
+                        
             if(checkBoxCurrent.isSelected())
                 lastUsedCheckBox = checkBoxCurrent;
             
