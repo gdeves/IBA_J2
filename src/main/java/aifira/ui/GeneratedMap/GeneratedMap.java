@@ -42,10 +42,10 @@ public class GeneratedMap {
   public GeneratedMap(Spectra spectra,double[] countPerPixel,float start, float end,int width,int height) {
     source=spectra;
     roiPixels=countPerPixel;
-    ip = new FloatProcessor(height,width,countPerPixel);
+    ip = new FloatProcessor(width,height,countPerPixel);
     minROI=start;
     maxROI=end;
-  }
+      }
   
   /**
    * Getter
