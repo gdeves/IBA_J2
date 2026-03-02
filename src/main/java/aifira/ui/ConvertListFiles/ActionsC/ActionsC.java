@@ -339,8 +339,8 @@ private void plot(double [] Yvalues, String title, int datasetType){
   */
   private void processSTIM(ADC adc, listFiles lF, int indexOfADC){
       try{
-      if((flags[21]==1)||(flags[25]==1)) adc.medianSort(); //map calculation
-      if (flags[21]==1) adc.saveMedianImage(lF.setExtension("medMap.txt")); //saving map
+      adc.medianSort(); //map calculation
+      if (flags[23]==1) adc.saveMedianImage(lF.setExtension("medMap.txt")); //saving map
       if (flags[25]==1) fillStack(adc,lF); //displaying map
       if (flags[20]==1) adc.saveCountsSpectra(lF.setExtension("stim_ADC" +Integer.toString(indexOfADC+1)+".asc")); // save spectra
       //save XYE list file
