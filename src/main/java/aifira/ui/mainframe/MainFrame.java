@@ -2,7 +2,6 @@ package aifira.ui.mainframe;
 
 import aifira.ui.ConvertListFiles.ADC.ADC;
 import aifira.ui.ConvertListFiles.FrameC.FrameC;
-import aifira.ui.FrameConfigSave.FrameConfigSave;
 import aifira.ui.FrameConfigLang.FrameConfigLang;
 import aifira.ui.FrameAbout.FrameAbout;
 import aifira.ui.Prefs.PrefsManager;
@@ -10,13 +9,7 @@ import aifira.ui.Spectra.Spectra;
 import aifira.ui.GeneratedMap.GeneratedMap;
 import aifira.ui.CustomWindowImage.CustomWindowImage;
 import ij.IJ;
-import ij.ImagePlus;
 import java.awt.HeadlessException;
-import java.io.BufferedInputStream;
-import java.io.BufferedReader;
-import java.io.DataInputStream;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -25,7 +18,6 @@ import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.Desktop;
-import java.net.URL;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.BufferedReader;
@@ -318,8 +310,6 @@ public final class MainFrame extends javax.swing.JFrame {
                             String savePath = outputPath + "_" + mapNames.get(i) + ".tif";
                             ImagePlus ip = roiMap[i].getImagePlus();
                             ip.setProperty("Info", path);
-                            String binaryPath = (String) ip.getProperty("sourceBinaryPath");
-                            IJ.log("DEBUG binaryPath from metadata: " + binaryPath);
                             IJ.saveAsTiff(ip, savePath);
                             IJ.log("Saved: " + savePath);
                         }
@@ -344,9 +334,6 @@ public final class MainFrame extends javax.swing.JFrame {
         // Récupérer le répertoire de Fiji
     String fijiDir = IJ.getDirectory("imagej");  // Retourne le chemin de Fiji
     String prefsFile = fijiDir + "IJ_Prefs.txt";
-    
-    System.out.println("DEBUG: Fiji dir = " + fijiDir);
-    System.out.println("DEBUG: Prefs file = " + prefsFile);
     
     // Vérifier que le fichier existe
     java.io.File f = new java.io.File(prefsFile);
