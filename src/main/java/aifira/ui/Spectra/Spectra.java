@@ -404,13 +404,13 @@ public final class Spectra {
     int minIndex= getIndex(minEnergy,false)+minChannel;
     int maxIndex= getIndex(maxEnergy,true)+minChannel;
     //double[] countPerPixel= new double[(width+1)*(height+1)];
-    double[] countPerPixel= new double[(width+1)*(height+1)];
+    double[] countPerPixel= new double[(width)*(height)];
     for (int i=0;i<adc.getNEvents();i++){
       int[] event=adc.getEvent(i);
       try{
         if (event[2]>=minIndex && event[2]<=maxIndex){
             //countPerPixel[event[0]-1+(event[1]-1)*(width)]+=1;
-            countPerPixel[event[0]+(event[1])*(width)]+=1;
+            countPerPixel[(event[0]-1) + (event[1]-1)*width] += 1;
             //countPerPixel[event[0]+(event[1])*(width)]+=1;
         }
       } catch(Exception e){
@@ -447,10 +447,7 @@ public final class Spectra {
         roiIndex[i][0]= getIndex(rois[i][0],false)+minChannel;
         roiIndex[i][1]= getIndex(rois[i][1],true)+minChannel;
     }
-    //double[][] countPerPixel= new double[rois.length][(width+1)*(height+1)];
-    double[][] countPerPixel= new double[rois.length][(width+1)*(height+1)];
-     IJ.log("width: " + Integer.toString(width));
-     IJ.log("height: " + Integer.toString(height));
+    double[][] countPerPixel= new double[rois.length][(width)*(height)];
      
     for (int i=0;i<adc.getNEvents();i++){
       int[] event=adc.getEvent(i);
@@ -461,9 +458,7 @@ public final class Spectra {
             
             try{
                 if (event[2]>=minRoiIndex && event[2]<=maxRoiIndex){
-
-                    //countPerPixel[j][event[0]-1+(event[1]-1)*(width)]+=1;
-                    countPerPixel[j][event[0]+(event[1])*(width+1)]+=1;
+                    countPerPixel[j][(event[0]-1)+(event[1]-1)*(width)]+=1;
                 }
             } catch (Exception e){
                 IJ.log("** Warning** Event XYE "+event[0] + " " + event[1] + " " + event[2] + " in map " + j +" removed / " + e.toString());
@@ -477,7 +472,7 @@ public final class Spectra {
     for (int i=0; i<rois.length;i++){
         float start = rois[i][0];
         float end = rois[i][1];
-        arrayOfImgGen[i]= new GeneratedMap(this,countPerPixel[i],start,end,width+1,height+1);
+        arrayOfImgGen[i]= new GeneratedMap(this,countPerPixel[i],start,end,width,height);
         producedMaps.add(arrayOfImgGen[i]);
     }
     
