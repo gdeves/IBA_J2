@@ -3,6 +3,7 @@ import aifira.ui.ConvertListFiles.FrameC.FrameC;
 import aifira.ui.ConvertListFiles.ADC.ADC;
 import aifira.ui.ConvertListFiles.MPA3.MPA3;
 import aifira.ui.ConvertListFiles.listFiles.listFiles;
+import aifira.ui.Spectra.Spectra;
 import javax.swing.JFileChooser;
 import java.io.File;
 import java.util.ArrayList;
@@ -16,6 +17,8 @@ import java.awt.Component;
 import java.awt.HeadlessException;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Date;
@@ -526,6 +529,200 @@ private void plot(double [] Yvalues, String title, int datasetType){
           }
           catch (IOException e){
           }
+  }
+  private void readAndDisplayMpaFile(File file) {
+      try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+
+          // Read all lines into memory for sequential parsing
+          ArrayList<String> lines = new ArrayList<>();
+          String line;
+          while ((line = br.readLine()) != null) {
+              lines.add(line.trim());
+          }
+
+          // -----------------------------------------------------------
+          // Pass 1: parse [ADCi] header sections (i is 1-based in file)
+          //   adcRange[i]  = range for ADC i+1, stored at 0-based index i
+          //   adcActive[i] = true when active=2
+          //   ADC7 -> 0-based index 6 -> image width
+          //   ADC8 -> 0-based index 7 -> image height
+          // -----------------------------------------------------------
+          int[]     adcRange  = new int[16];
+          boolean[] adcActive = new boolean[16];
+          int imgWidth  = 1;
+          int imgHeight = 1;
+          int currentAdc = -1; // 0-based index of ADC section being parsed
+
+          for (String l : lines) {
+              String lLower = l.toLowerCase();
+
+              // Detect [ADCi] section header
+              if (l.matches("(?i)\\[ADC(\\d+)\\]")) {
+                  currentAdc = Integer.parseInt(l.replaceAll("(?i)[^0-9]", "")) - 1;
+                  continue;
+              }
+              // Stop header parsing at first data/map section
+              if (lLower.startsWith("[data") || lLower.startsWith("[cdat")) {
+                  break;
+              }
+              // Parse key=value pairs inside [ADCi] blocks
+              if (currentAdc >= 0 && currentAdc < 16 && l.contains("=")) {
+                  int eqIdx  = l.indexOf('=');
+                  String key = l.substring(0, eqIdx).trim().toLowerCase();
+                  String val = l.substring(eqIdx + 1).trim();
+                  // Strip trailing spaces or comments after the value
+                  int spaceIdx = val.indexOf(' ');
+                  if (spaceIdx > 0) val = val.substring(0, spaceIdx);
+                  try {
+                      if (key.equals("range")) {
+                          adcRange[currentAdc] = Integer.parseInt(val);
+                          // ADC7 (index 6) -> width, ADC8 (index 7) -> height
+                          if (currentAdc == 6) imgWidth  = adcRange[6];
+                          if (currentAdc == 7) imgHeight = adcRange[7];
+                      } else if (key.equals("active")) {
+                          adcActive[currentAdc] = (Integer.parseInt(val) == 2);
+                      }
+                  } catch (NumberFormatException ignored) {}
+              }
+          }
+
+          IJ.log("  Image dimensions (ADC7 x ADC8): " + imgWidth + " x " + imgHeight);
+          String fileName = file.getName();
+
+          // -----------------------------------------------------------
+          // Pass 2: locate [DATAi, N] and [CDATj, M] section markers
+          //   and read the integer values that immediately follow.
+          //
+          //   [DATAi, N] : i is 0-based ADC index in file
+          //                (DATA6 = ADC index 6 = "ADC7" in user terms)
+          //   [CDATj, M] : j is 0-based map index
+          //                values are in row-major order: pixel(x,y) = values[y*width + x]
+          // -----------------------------------------------------------
+          int mapCount = 0; // number of CDAT sections encountered
+
+          for (int li = 0; li < lines.size(); li++) {
+              String l      = lines.get(li);
+              String lLower = l.toLowerCase();
+
+              // --- Spectrum section: [DATAi, N] ---
+              if (lLower.matches("\\[data\\d+,\\s*\\d+\\s*\\]")) {
+                  String inner   = l.substring(1, l.length() - 1); // strip [ ]
+                  String[] parts = inner.split(",");
+                  // adcIdx is 0-based: DATA6 -> user ADC7
+                  int adcIdx  = Integer.parseInt(parts[0].trim().replaceAll("(?i)[^0-9]", ""));
+                  int nValues = Integer.parseInt(parts[1].trim());
+
+                  double[] spectrum = new double[nValues];
+                  int read = 0;
+                  while (read < nValues && li + 1 < lines.size()) {
+                      li++;
+                      String v = lines.get(li).trim();
+                      if (v.isEmpty()) continue;
+                      if (v.startsWith("[")) { li--; break; } // next section reached
+                      try { spectrum[read++] = Double.parseDouble(v); }
+                      catch (NumberFormatException ignored) {}
+                  }
+
+                  // Build an ADC from the counts array, then a Spectra for FrameSpectra display
+                  // adcIdx is 0-based (DATA6 = ADC index 6 = "ADC7" in user terms)
+                  String title = fileName + "  ADC" + (adcIdx + 1)
+                                 + "  [" + nValues + " ch]";
+                  IJ.log("  Plotting spectrum: " + title);
+                  ADC adcFromFile = new ADC(spectrum, nValues);
+                  Spectra sp = new Spectra(adcFromFile, file.getAbsolutePath());
+                  sp.plot(title, title).setVisible(true);
+              }
+
+              // --- Map section: [CDATj, M] ---
+              else if (lLower.matches("\\[cdat\\d+,\\s*\\d+\\s*\\]")) {
+                  String inner   = l.substring(1, l.length() - 1);
+                  String[] parts = inner.split(",");
+                  int nValues    = Integer.parseInt(parts[1].trim());
+
+                  int[] pixels = new int[nValues];
+                  int read = 0;
+                  while (read < nValues && li + 1 < lines.size()) {
+                      li++;
+                      String v = lines.get(li).trim();
+                      if (v.isEmpty()) continue;
+                      if (v.startsWith("[")) { li--; break; }
+                      try { pixels[read++] = Integer.parseInt(v); }
+                      catch (NumberFormatException ignored) {}
+                  }
+
+                  String title = fileName + "  Map" + mapCount;
+                  IJ.log("  Displaying map: " + title
+                         + "  (" + imgWidth + " x " + imgHeight + ")");
+                  displayMap(pixels, imgWidth, imgHeight, title);
+                  mapCount++;
+              }
+          }
+
+      } catch (IOException e) {
+          IJ.log("readAndDisplayMpaFile - IOException: " + e.getMessage());
+      } catch (Exception e) {
+          IJ.log("readAndDisplayMpaFile - Error: " + e.getMessage());
+      }
+  }
+    /**
+   * Builds a ShortProcessor image from a flat pixel array and displays it
+   * as an ImagePlus window in FIJI with automatic contrast enhancement (0.35%).
+   * The array is assumed to be row-major: pixel(x,y) = pixels[y * width + x].
+   *
+   * @param pixels   flat array of integer pixel values (length = width * height)
+   * @param width    image width  in pixels (from ADC7 range, 0-based index 6)
+   * @param height   image height in pixels (from ADC8 range, 0-based index 7)
+   * @param title    window title shown in FIJI
+   */
+  private void displayMap(int[] pixels, int width, int height, String title) {
+      try {
+          // Safety fallback if header dimensions were not found
+          if (width  <= 0) width  = (int) Math.sqrt(pixels.length);
+          if (height <= 0) height = (int) Math.sqrt(pixels.length);
+
+          ImageProcessor ip = new ShortProcessor(width, height);
+          for (int y = 0; y < height; y++) {
+              for (int x = 0; x < width; x++) {
+                  int idx = y * width + x;
+                  if (idx < pixels.length) ip.set(x, y, pixels[idx]);
+              }
+          }
+          ImagePlus imp = new ImagePlus(title, ip);
+          ContrastEnhancer ce = new ContrastEnhancer();
+          ce.stretchHistogram(imp, 0.35);
+          imp.show();
+      } catch (Exception e) {
+          IJ.log("displayMap - Error: " + e.getMessage());
+      }
+  }
+  public void selectAndDisplayMpaTextFiles() {
+      try {
+          PrefsManager localPrefs = new PrefsManager();
+          localPrefs.setPreference();
+
+          JFileChooser jF = new JFileChooser();
+          File myDir = new File(localPrefs.getLastUsedDirectory());
+          jF.addChoosableFileFilter(new FileNameExtensionFilter("MPA text file", "mpa"));
+          jF.setFileFilter(jF.getChoosableFileFilters()[1]);
+          jF.setCurrentDirectory(myDir);
+          jF.setApproveButtonText("OK");
+          jF.setMultiSelectionEnabled(true);
+          jF.showOpenDialog(null);
+
+          File[] selectedFiles = jF.getSelectedFiles();
+          if (selectedFiles == null || selectedFiles.length == 0) return;
+
+          for (File f : selectedFiles) {
+              localPrefs.saveDirectory(f.getAbsolutePath());
+              IJ.log("Reading MPA file: " + f.getAbsolutePath());
+              readAndDisplayMpaFile(f);
+          }
+
+          IJ.showStatus("MPA files loaded.");
+
+      } catch (HeadlessException e) {
+          IJ.log("selectAndDisplayMpaTextFiles - HeadlessException: " + e.getMessage());
+      }
   }
 }
 
