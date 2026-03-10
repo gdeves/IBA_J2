@@ -1,9 +1,8 @@
 package aifira.ui.ConvertListFiles.ADC;
 import java.util.ArrayList;
 import ij.*;
-import ij.process.FloatProcessor;
+import ij.process.ImageProcessor;
 import java.io.*;
-
 /**
  * This class is used to describe ADC and associated methods
  * ADC contains a list of events (an event : x,y,E) sorted by time
@@ -17,8 +16,14 @@ public class ADC{
     private final ArrayList<Integer> median = new ArrayList<>();
     private final ArrayList<Integer> activationPeriods = new ArrayList<>();
     private String path;
-    private Integer sizeMapX=0;
-    private Integer sizeMapY=0;
+    private final Integer sizeMapX=1024;
+    private final Integer sizeMapY=1024;
+    /**
+     * When non-null, getSpectra() and getSpectra(size) return this array directly
+     * instead of computing counts from the eventList.
+     * Set by the ADC(double[], int) constructor for MPA text file import.
+     */
+    private double[] spectraFromFile = null;
 
     
     /**
@@ -40,11 +45,30 @@ public class ADC{
         this.path=path;
 
     }
-    
+    /**
+     * Constructor for creating an ADC directly from a counts array read from
+     * an MPA text file. The array is stored as-is and returned by getSpectra()
+     * and getSpectra(size) without any computation from the eventList.
+     * A single dummy event [0,0,0] is added so that getNEvents() returns 1
+     * and callers that expect a non-empty ADC do not fail.
+     *
+     * @param spectraCounts array of counts, one value per channel (from [DATAi,N])
+     * @param nChannels     number of channels (== spectraCounts.length == range from header)
+     */
+    public ADC(double[] spectraCounts, int nChannels) {
+        eventList.add(new int[3]); // dummy event to satisfy getNEvents() > 0
+        median.add(0);
+        // Copy into a fixed-size array matching nChannels
+        this.spectraFromFile = new double[nChannels];
+        for (int i = 0; i < nChannels && i < spectraCounts.length; i++) {
+            this.spectraFromFile[i] = spectraCounts[i];
+        }
+    }
+
+      
     private void initializeMedianMap(){
         try{
-          
-        for (int i=0;i<sizeMapX*sizeMapY;i++){
+        for (int i=0;i<sizeMapX*sizeMapY+1;i++){
             map.add(new ArrayList<Integer>());
             map.get(i).add(0);
         }
@@ -145,10 +169,20 @@ public class ADC{
 
 
     /**
-     * Calculates a 4096 channels spectra from an event list
+     * Calculates a 4096 channels spectra from an event list.
+     * If this ADC was built from an MPA text file via ADC(double[], int),
+     * returns the pre-loaded counts array directly (padded or truncated to 4096).
      * @return a Table containing 4096 values (double type)
      */
     public double[] getSpectra(){
+            // MPA text file path: return stored array directly
+            if (spectraFromFile != null) {
+                double[] result = new double[4096];
+                for (int i = 0; i < 4096 && i < spectraFromFile.length; i++) {
+                    result[i] = spectraFromFile[i];
+                }
+                return result;
+            }
             int size=4096;
             double[] spectra=new double[size];
             try{
@@ -167,11 +201,21 @@ public class ADC{
     }
 
     /**
-     * Calculates a spectra from an event list
+     * Calculates a spectra from an event list.
+     * If this ADC was built from an MPA text file via ADC(double[], int),
+     * returns the pre-loaded counts array directly (padded or truncated to size).
      * @param size size of spectra (number of channel) to be calculated
      * @return spectra as a table containing the [size] values
      */
     public double [] getSpectra(int size){
+            // MPA text file path: return stored array directly
+            if (spectraFromFile != null) {
+                double[] result = new double[size];
+                for (int i = 0; i < size && i < spectraFromFile.length; i++) {
+                    result[i] = spectraFromFile[i];
+                }
+                return result;
+            }
             double[] spectra=new double[size];
             try{
                     for (int i=0;i<getNEvents();i++){
@@ -470,15 +514,9 @@ public class ADC{
     public ArrayList<Integer> medianSort(){
 
             try{
-                median.clear(); // ✅ vider avant de remplir
-                map.clear();
-                sizeMapX = getMaxX(); // ✅ calculer dynamiquement
-                sizeMapY = getMaxY();
                 initializeMedianMap();
-                
                 for (int i=1;i<getNEvents();i++){
-                    
-                    int index = (int)(getX(i)-1) + sizeMapX*(int)(getY(i)-1);
+                    int index=(int)getX(i)+sizeMapX*(int)getY(i)+1;
                     try{
                         map.get(index).add((int)getE(i));
                     }
@@ -490,8 +528,7 @@ public class ADC{
             catch (Exception e){
                 IJ.log("**Error** " + e.toString());
             }
-            
-            for (int i=0;i<map.size();i++){
+            for (int i=1;i<map.size();i++){
                 java.util.Collections.sort(map.get(i));
                 int size=map.get(i).size();
                 median.add(map.get(i).get((int)(size/2)));
@@ -499,24 +536,44 @@ public class ADC{
             return  median;
     }
 
-    
+    /**
+     * Saves median map as a 2D text file using given path
+     * @param path filename for 2D text file
+     */
+    public void saveMedianTextImage(String path){
+            try{
+                    PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(path)));
+
+                    for (int x=0;x<sizeMapX;x++) {
+                            String line="";
+                            for (int y=0;y<sizeMapY;y++){
+                                    line+=String.valueOf(median.get(x+sizeMapX*y))+" ";
+                            }
+                            out.println(line);
+                    }
+                    out.close();                  
+            }
+            catch (IOException e){
+                IJ.log("**Error3 in saving median text image " + e.toString());
+            }
+    }
     /**
      * Save median map as a TIFF file
      * @param path for the saved file
      */
-public void saveMedianImage(String path){
-    try{
-        FloatProcessor ip = new FloatProcessor(sizeMapX, sizeMapY);
-        for (int x=0; x<sizeMapX; x++){
-            for (int y=0; y<sizeMapY; y++){
-                ip.setf(x, y, median.get(x + sizeMapX*y).floatValue());
+    public void saveMedianImage(String path){
+        ImagePlus imp = new ImagePlus();  
+        ImageProcessor ip = imp.getProcessor(); 
+        try{
+        for (int x=0;x<sizeMapX;x++) {
+            for (int y=0;y<sizeMapY;y++){
+                ip.set(x,y,median.get(x+sizeMapX*y));
             }
         }
-        ImagePlus imp = new ImagePlus("Median", ip);
-        IJ.saveAs(imp, "TIFF", path);
         }
-    catch(Exception e){
-        IJ.log("**Error in saving median image** " + e.toString());
-    }
-}   
+        catch (Exception e){
+            IJ.log("**Error in saving median image** " + e.toString());
+        }
+        IJ.saveAs(imp, "TIFF",path);
+    }    
 }
