@@ -79,6 +79,7 @@ public final class MainFrame extends javax.swing.JFrame {
         jButtonParamLst = new javax.swing.JButton();
         jButtonParamPIXE = new javax.swing.JButton();
         jButtonOpenMaps = new javax.swing.JButton();
+        jButton1 = new javax.swing.JButton();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu_file = new javax.swing.JMenu();
         jMenu_open = new javax.swing.JMenuItem();
@@ -126,6 +127,13 @@ public final class MainFrame extends javax.swing.JFrame {
         jButtonOpenMaps.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButtonOpenMapsActionPerformed(evt);
+            }
+        });
+
+        jButton1.setText("MPA reader");
+        jButton1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton1ActionPerformed(evt);
             }
         });
 
@@ -185,16 +193,15 @@ public final class MainFrame extends javax.swing.JFrame {
                         .addComponent(jButtonParamLst, javax.swing.GroupLayout.PREFERRED_SIZE, 243, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButtonOpenLst, javax.swing.GroupLayout.PREFERRED_SIZE, 243, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addContainerGap(40, Short.MAX_VALUE))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addGroup(layout.createSequentialGroup()
-                                .addGap(0, 0, Short.MAX_VALUE)
-                                .addComponent(jButtonOpenMaps, javax.swing.GroupLayout.PREFERRED_SIZE, 243, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(jButtonParamPIXE, javax.swing.GroupLayout.PREFERRED_SIZE, 243, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addComponent(jButtonOpenXYEList, javax.swing.GroupLayout.PREFERRED_SIZE, 243, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                            .addComponent(jButton1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(jButtonParamPIXE, javax.swing.GroupLayout.DEFAULT_SIZE, 243, Short.MAX_VALUE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jButtonOpenXYEList, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 243, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jButtonOpenMaps, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 243, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addGap(40, 40, 40))))
         );
         layout.setVerticalGroup(
@@ -209,7 +216,9 @@ public final class MainFrame extends javax.swing.JFrame {
                     .addComponent(jButtonParamPIXE, javax.swing.GroupLayout.PREFERRED_SIZE, 38, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jButtonOpenXYEList, javax.swing.GroupLayout.PREFERRED_SIZE, 38, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(18, 18, 18)
-                .addComponent(jButtonOpenMaps, javax.swing.GroupLayout.PREFERRED_SIZE, 34, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(jButtonOpenMaps, javax.swing.GroupLayout.DEFAULT_SIZE, 34, Short.MAX_VALUE)
+                    .addComponent(jButton1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
@@ -231,7 +240,7 @@ public final class MainFrame extends javax.swing.JFrame {
     PrefsManager prefs = new PrefsManager();
     
     boolean isBatch = paths.length > 1;
-    
+    int count=0;
     for(String path : paths){
         DataInputStream ips = null;
         try{
@@ -267,7 +276,9 @@ public final class MainFrame extends javax.swing.JFrame {
                 int nROI = Integer.valueOf(prefs.ijGetValue("IBA.nROI", "5"));
                 
                 if(isBatch){
-                    IJ.log("Batch processing: " + f.getName());
+                    
+                    IJ.showProgress(count, paths.length);
+                    
     
                     ArrayList<String> mapNames = new ArrayList<>();
                     ArrayList<float[]> roiLimits = new ArrayList<>();
@@ -325,7 +336,9 @@ public final class MainFrame extends javax.swing.JFrame {
                 }
             }
         }
+     count+=1;   
     }
+    IJ.showProgress(1, 1);
     java.lang.System.gc();
     
     }//GEN-LAST:event_jButtonOpenXYEListActionPerformed
@@ -409,6 +422,10 @@ public final class MainFrame extends javax.swing.JFrame {
             }
         }
     }//GEN-LAST:event_jButtonOpenMapsActionPerformed
+
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+        frameConfigLst.openMPA();
+    }//GEN-LAST:event_jButton1ActionPerformed
 
     
     
@@ -712,6 +729,7 @@ public String[] readLinesFileFromResource(String resourcePath) throws IOExceptio
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.ButtonGroup bG_language;
+    private javax.swing.JButton jButton1;
     private javax.swing.JButton jButtonOpenLst;
     private javax.swing.JButton jButtonOpenMaps;
     private javax.swing.JButton jButtonOpenXYEList;
