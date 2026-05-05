@@ -4,6 +4,7 @@ aifira\ui\ConvertListFiles\FrameE\FrameE$67.class
 aifira\ui\ConvertListFiles\FrameE\FrameE$4.class
 aifira\ui\FrameConfigSave\FrameConfigSave$1.class
 aifira\ui\ConvertListFiles\FrameE\FrameE$70.class
+aifira\ui\mainframe\MainFrame$10.class
 aifira\ui\FrameConfigLang\FrameConfigLang$1.class
 aifira\ui\ConvertListFiles\FrameE\FrameE$83.class
 aifira\ui\ConvertListFiles\FrameE\FrameE$54.class
@@ -22,7 +23,6 @@ aifira\ui\mainframe\MainFrame$3.class
 aifira\ui\FrameConfigLang\FrameConfigLang.class
 aifira\ui\ConvertListFiles\FrameE\FrameE$71.class
 aifira\ui\ConvertListFiles\FrameE\FrameE$3.class
-aifira\ui\ConvertListFiles\FrameC\FrameC$9.class
 aifira\ui\ConvertListFiles\FrameE\FrameE$61.class
 aifira\ui\ConvertListFiles\FrameE\FrameE$59.class
 aifira\ui\ConvertListFiles\FrameE\FrameE$11.class
@@ -49,6 +49,7 @@ aifira\ui\ConvertListFiles\FrameE\FrameE$84.class
 aifira\ui\ConvertListFiles\FrameE\FrameE$31.class
 aifira\IBA_J2$1.class
 aifira\ui\ConvertListFiles\FrameE\FrameE$38.class
+aifira\ui\resources\lib\FrameSpectraCBListener$ROIEntry.class
 aifira\ui\mainframe\MainFrame.class
 aifira\ui\ConvertListFiles\FrameE\FrameE$37.class
 aifira\ui\ConvertListFiles\FrameE\FrameE$36.class
@@ -89,15 +90,13 @@ aifira\ui\ConvertListFiles\FrameE\FrameE$65.class
 aifira\ui\ConvertListFiles\FrameE\FrameE$49.class
 aifira\ui\ConvertListFiles\FrameE\FrameE$56.class
 aifira\ui\ConvertListFiles\FrameE\FrameE$13.class
+aifira\ui\mainframe\MainFrame$9.class
 aifira\ui\ConvertListFiles\FrameE\FrameE$10.class
-aifira\ui\ConvertListFiles\FrameC\FrameC$11.class
-aifira\ui\ConvertListFiles\FrameC\FrameC$12.class
 aifira\ui\ConvertListFiles\FrameE\FrameE$1.class
 aifira\ui\mainframe\MainFrame$6.class
 aifira\ui\ConvertListFiles\FrameE\FrameE$57.class
 aifira\ui\ConvertListFiles\FrameE\FrameE$2.class
 aifira\ui\ConvertListFiles\FrameE\FrameE$47.class
-aifira\ui\ConvertListFiles\FrameC\FrameC$10.class
 aifira\ui\ConvertListFiles\ActionsC\ActionsC.class
 aifira\ui\resources\lib\FrameSpectra$1.class
 aifira\ui\mainframe\MainFrame$4.class

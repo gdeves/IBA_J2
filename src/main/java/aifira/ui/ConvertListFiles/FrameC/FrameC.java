@@ -199,9 +199,7 @@ public class FrameC extends javax.swing.JFrame {
         jLabel18 = new JLabel();
         jCheckBox5 = new JCheckBox();
         jLabel19 = new JLabel();
-        jCheckBox6 = new JCheckBox();
         jCheckBox7 = new JCheckBox();
-        jLabel20 = new JLabel();
         jCheckBox9 = new JCheckBox();
         jCheckBox12 = new JCheckBox();
 
@@ -1321,7 +1319,7 @@ public class FrameC extends javax.swing.JFrame {
         });
         gridBagConstraints = new GridBagConstraints();
         gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 4;
+        gridBagConstraints.gridy = 3;
         gridBagConstraints.anchor = GridBagConstraints.WEST;
         jPanelC.add(jCheckBox2, gridBagConstraints);
 
@@ -1381,22 +1379,8 @@ public class FrameC extends javax.swing.JFrame {
         gridBagConstraints.gridx = 2;
         gridBagConstraints.gridy = 1;
         gridBagConstraints.anchor = GridBagConstraints.WEST;
-        gridBagConstraints.insets = new Insets(10, 5, 0, 0);
+        gridBagConstraints.insets = new Insets(10, 25, 0, 0);
         jPanelC.add(jLabel19, gridBagConstraints);
-
-        jCheckBox6.setText("STIM map");
-        jCheckBox6.setName("jCheckBox6"); // NOI18N
-        jCheckBox6.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent evt) {
-                jCheckBox6ActionPerformed(evt);
-            }
-        });
-        gridBagConstraints = new GridBagConstraints();
-        gridBagConstraints.gridx = 1;
-        gridBagConstraints.gridy = 2;
-        gridBagConstraints.anchor = GridBagConstraints.WEST;
-        gridBagConstraints.insets = new Insets(0, 0, 0, 10);
-        jPanelC.add(jCheckBox6, gridBagConstraints);
 
         jCheckBox7.setText("spectra");
         jCheckBox7.setName("jCheckBox7"); // NOI18N
@@ -1409,16 +1393,8 @@ public class FrameC extends javax.swing.JFrame {
         gridBagConstraints.gridx = 2;
         gridBagConstraints.gridy = 2;
         gridBagConstraints.anchor = GridBagConstraints.LINE_START;
+        gridBagConstraints.insets = new Insets(0, 25, 0, 0);
         jPanelC.add(jCheckBox7, gridBagConstraints);
-
-        jLabel20.setText("Calculate");
-        jLabel20.setName("jLabel20"); // NOI18N
-        gridBagConstraints = new GridBagConstraints();
-        gridBagConstraints.gridx = 1;
-        gridBagConstraints.gridy = 1;
-        gridBagConstraints.anchor = GridBagConstraints.LINE_START;
-        gridBagConstraints.insets = new Insets(10, 5, 0, 0);
-        jPanelC.add(jLabel20, gridBagConstraints);
 
         jCheckBox9.setText("STIM stack");
         jCheckBox9.setName("jCheckBox9"); // NOI18N
@@ -1444,6 +1420,7 @@ public class FrameC extends javax.swing.JFrame {
         gridBagConstraints.gridx = 2;
         gridBagConstraints.gridy = 3;
         gridBagConstraints.anchor = GridBagConstraints.LINE_START;
+        gridBagConstraints.insets = new Insets(0, 25, 0, 0);
         jPanelC.add(jCheckBox12, gridBagConstraints);
 
         gridBagConstraints = new GridBagConstraints();
@@ -1477,14 +1454,7 @@ public class FrameC extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jCheckBox2ActionPerformed
 
-    // Flag for median map (21)
-    private void jCheckBox6ActionPerformed(ActionEvent evt) {//GEN-FIRST:event_jCheckBox6ActionPerformed
-        int flag=21;
-        AbstractButton AB = (AbstractButton) evt.getSource();
-	if (AB.getModel().isSelected()) act.setFlags(flag,1);
-	else act.setFlags(flag,0);
-    }//GEN-LAST:event_jCheckBox6ActionPerformed
-    // Set flag for sorting events (16)
+   // Set flag for sorting events (16)
     private void jCheckBox1ActionPerformed(ActionEvent evt) {//GEN-FIRST:event_jCheckBox1ActionPerformed
         int flag=16;
         AbstractButton AB = (AbstractButton) evt.getSource();
@@ -1545,7 +1515,16 @@ public class FrameC extends javax.swing.JFrame {
 	act.process();
 	java.lang.System.gc();
     }    
-
+    /**
+     * This method is used to open a lst file and will save the resulting pixe, rbs or stim file
+     */
+/**
+ * Opens MPA text files (.mpa) and displays their spectra and maps.
+ * Called by the dedicated button in the interface.
+ */
+public void openMPA() {
+    act.selectAndDisplayMpaTextFiles();
+}
 	
     private final ActionsC act=new ActionsC();
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -1571,7 +1550,6 @@ public class FrameC extends javax.swing.JFrame {
     private JCheckBox jCheckBox3;
     private JCheckBox jCheckBox4;
     private JCheckBox jCheckBox5;
-    private JCheckBox jCheckBox6;
     private JCheckBox jCheckBox7;
     private JCheckBox jCheckBox9;
     private JLabel jLabel1;
@@ -1586,7 +1564,6 @@ public class FrameC extends javax.swing.JFrame {
     private JLabel jLabel18;
     private JLabel jLabel19;
     private JLabel jLabel2;
-    private JLabel jLabel20;
     private JLabel jLabel21;
     private JLabel jLabel22;
     private JLabel jLabel23;

@@ -284,7 +284,7 @@ private void plot(double [] Yvalues, String title, int datasetType){
           
           if (flags[19]==1) rbs.saveChannelCountsSpectra(lF.setExtension("asc.dat"));
           if (flags[27]==1) rbs.saveXYEListFile(lF.setExtension("RBS"), (short)1);
-          else if (flags[16]==1) rbs.saveXYEListFile(lF.setExtension("ADC"+Integer.toString(indexOfADC+1)+".rbs2"));
+          else if (flags[16]==1) rbs.saveXYEListFile(lF.setExtension("ADC"+Integer.toString(indexOfADC+1)+".rbs"));
           if (flags[22]==1){
             String justName = new File(lF.getPath()).getName();
             String title=justName+" ADC: "+String.valueOf(indexOfADC+1)+": RBS - N counts = " +String.valueOf(rbs.getNEvents()-1); 
@@ -303,13 +303,13 @@ private void plot(double [] Yvalues, String title, int datasetType){
     // ✅ Fichiers individuels - seulement si flags[17]==1 et pas l'ADC somme
     if (flags[17]==1 && indexOfADC != 16){
         pixe.saveGupixSpectra(lF.setExtension("ADC"+Integer.toString(indexOfADC+1)+".gup"));
-        if (flags[16]==1) pixe.saveXYEListFile(lF.setExtension("ADC"+Integer.toString(indexOfADC+1)+".pixe2"));
+        if (flags[16]==1) pixe.saveXYEListFile(lF.setExtension("ADC"+Integer.toString(indexOfADC+1)+".pixe"));
     }
 
     // ✅ Fichier gup somme - seulement si flags[18]==1 et ADC somme
     if (flags[18]==1 && indexOfADC == 16){
         pixe.saveGupixSpectra(lF.setExtension("sumAll.gup"));
-        pixe.saveXYEListFile(lF.setExtension("sumAll.pixe2"));
+        pixe.saveXYEListFile(lF.setExtension("sumAll.pixe"));
     }
 
     // ✅ Accumulation somme dans pixe_stack
@@ -348,7 +348,7 @@ private void plot(double [] Yvalues, String title, int datasetType){
       if (flags[20]==1) adc.saveCountsSpectra(lF.setExtension("stim_ADC" +Integer.toString(indexOfADC+1)+".asc")); // save spectra
       //save XYE list file
       if (flags[27]==1) adc.saveXYEListFile(lF.setExtension("_ADC"+Integer.toString(indexOfADC+1)+"STIM"),(short)2); // save stim
-      else if (flags[16]==1) adc.saveXYEListFile(lF.setExtension("_ADC"+Integer.toString(indexOfADC+1)+".stim2"));
+      else if (flags[16]==1) adc.saveXYEListFile(lF.setExtension("_ADC"+Integer.toString(indexOfADC+1)+".stim"));
       //Output: display spectra
       if (flags[22]==1){
           String justName = new File(lF.getPath()).getName();

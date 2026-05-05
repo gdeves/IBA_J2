@@ -69,7 +69,7 @@ public class ADC{
     private void initializeMedianMap(){
         try{
         for (int i=0;i<sizeMapX*sizeMapY+1;i++){
-            map.add(new ArrayList<Integer>());
+            map.add(new ArrayList<>());
             map.get(i).add(0);
         }
         }
